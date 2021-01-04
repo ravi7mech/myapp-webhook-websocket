@@ -4,9 +4,7 @@ var app = express();
 var xhub = require('express-x-hub');
 var WebSocket = require('ws');
 
-var wss = new WebSocket.Server({
-    port: 8999
-  });  
+var wss = new WebSocket.Server();  
 
 app.set('port', (process.env.PORT || 5000));
 app.listen(app.get('port'));
