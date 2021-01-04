@@ -1,15 +1,12 @@
-/**
- * Copyright 2016-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 var bodyParser = require('body-parser');
 var express = require('express');
 var app = express();
 var xhub = require('express-x-hub');
+var WebSocket = require('ws');
+
+var wss = new WebSocket.Server({
+    port: 8999
+  });  
 
 app.set('port', (process.env.PORT || 5000));
 app.listen(app.get('port'));
@@ -38,6 +35,7 @@ app.get(['/facebook', '/instagram'], function(req, res) {
 
 app.post('/facebook', function(req, res) {
   console.log('Facebook request body:', req.body);
+  whenMessageIsReceived(req.body.toString());
 
   if (!req.isXHubValid()) {
     console.log('Warning - request header X-Hub-Signature not present or invalid');
@@ -58,5 +56,13 @@ app.post('/instagram', function(req, res) {
   received_updates.unshift(req.body);
   res.sendStatus(200);
 });
+
+function whenMessageIsReceived(data){
+    wss.clients.forEach((client) => {
+        if (client.readyState === 1) {
+          client.send(data);
+        }
+      });
+  }
 
 app.listen();
