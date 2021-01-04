@@ -4,7 +4,7 @@
   "description": "An demo app which integrated websockets and facebook webhooks",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [
     "facebook",
@@ -14,6 +14,8 @@
   "author": "Ravikumar",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.1"
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-x-hub": "^1.0.4"
   }
 }
