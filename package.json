@@ -1,0 +1,19 @@
+{
+  "name": "myapp-webhook-websocket",
+  "version": "1.0.0",
+  "description": "An demo app which integrated websockets and facebook webhooks",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "facebook",
+    "websocket",
+    "webhooks"
+  ],
+  "author": "Ravikumar",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
