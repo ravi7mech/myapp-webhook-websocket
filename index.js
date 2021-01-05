@@ -16,7 +16,7 @@ server.listen(port)
 
 console.log("http server listening on %d", port)
 
-
+var received_updates = [];
 // Web socket related
 var wss = new WebSocketServer({server: server})
 console.log("websocket server created")
@@ -80,7 +80,7 @@ app.post("/facebook", function (req, res) {
   }
 
   console.log("request header X-Hub-Signature validated");
-  whenMessageIsReceived(req.body.toString());
+  whenMessageIsReceived(JSON.stringify(req.body));
   // Process the Facebook updates here
   received_updates.unshift(req.body);
   res.sendStatus(200);
