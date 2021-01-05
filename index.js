@@ -1,56 +1,60 @@
 var WebSocketServer = require("ws").Server
 var http = require("http")
+var bodyParser = require("body-parser")
+var xhub = require("express-x-hub");
 var express = require("express")
 var app = express()
 var port = process.env.PORT || 5000
+var token = process.env.TOKEN || "token";
 
 app.use(express.static(__dirname + "/"))
+app.use(xhub({ algorithm: "sha1", secret: process.env.APP_SECRET }));
+app.use(bodyParser.json());
 
 var server = http.createServer(app)
 server.listen(port)
 
 console.log("http server listening on %d", port)
 
+
+// Web socket related
 var wss = new WebSocketServer({server: server})
 console.log("websocket server created")
 
-wss.on("connection", function(ws) {
-  var id = setInterval(function() {
-    ws.send(JSON.stringify(new Date()), function() {  })
-  }, 1000)
+wss.getUniqueID = function () {
+  function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  }
+  return s4() + s4() + '-' + s4();
+};
 
-  console.log("websocket connection open")
+
+wss.on("connection", function(ws) {
+  console.log("websocket connection Initiated ")
+  ws.id = wss.getUniqueID();
+
+  wss.clients.forEach(function each(client) {
+      console.log('Client.ID: ' + client.id);
+  });
+
+  ws.send(JSON.stringify({clientId: ws.id}));
 
   ws.on("close", function() {
-    console.log("websocket connection close")
-    clearInterval(id)
+    console.log("websocket connection close : "+ws.id)
   })
 })
 
+function whenMessageIsReceived(data) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === 1) {
+      client.send(data);
+    }
+  });
+}
 
+// http endpoints related
 app.get("/", function (req, res) {
   res.send("<pre>Hello World!</pre>");
-});
-
-
-/* var bodyParser = require("body-parser");
-var express = require("express");
-var app = express();
-var xhub = require("express-x-hub");
-var WebSocketServer = require("ws").Server;
-
-app.set("port", process.env.PORT || 5000);
-app.listen(app.get("port"));
-
-app.use(xhub({ algorithm: "sha1", secret: process.env.APP_SECRET }));
-app.use(bodyParser.json());
-
-var token = process.env.TOKEN || "token";
-var received_updates = [];
-
-app.get("/", function (req, res) {
-  console.log(req);
-  res.send("<pre>" + JSON.stringify(received_updates, null, 2) + "</pre>");
 });
 
 app.get(["/facebook", "/instagram"], function (req, res) {
@@ -63,10 +67,9 @@ app.get(["/facebook", "/instagram"], function (req, res) {
     res.sendStatus(400);
   }
 });
-
+// Request body validation
 app.post("/facebook", function (req, res) {
-  console.log("Facebook request body:", req.body);
-  whenMessageIsReceived(req.body.toString());
+  console.log("Facebook request body:", req.body.toString());
 
   if (!req.isXHubValid()) {
     console.log(
@@ -77,44 +80,9 @@ app.post("/facebook", function (req, res) {
   }
 
   console.log("request header X-Hub-Signature validated");
+  whenMessageIsReceived(req.body.toString());
   // Process the Facebook updates here
   received_updates.unshift(req.body);
   res.sendStatus(200);
 });
-
-app.post("/instagram", function (req, res) {
-  console.log("Instagram request body:");
-  console.log(req.body);
-  // Process the Instagram updates here
-  received_updates.unshift(req.body);
-  res.sendStatus(200);
-});
-
-var wss = new WebSocketServer({ server: app });
-console.log("websocket server created");
-
-wss.on("connection", function (ws) {
-  var id = setInterval(function () {
-    ws.send(JSON.stringify(new Date()), function () {});
-  }, 1000);
-
-  console.log("websocket connection open");
-
-  ws.on("close", function () {
-    console.log("websocket connection close");
-    clearInterval(id);
-  });
-});
-
-function whenMessageIsReceived(data) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      client.send(data);
-    }
-  });
-}
-
-app.listen();
- */
-
 
